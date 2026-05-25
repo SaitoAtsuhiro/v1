@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>持ち物チェック</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      padding: 20px;
+      color: #2d3748;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #2b6cb0;
+      margin-bottom: 4px;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      color: #718096;
+    }
+
+    /* 進捗バー */
+    .progress-wrap {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .progress-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #4a5568;
+    }
+
+    .progress-count {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #2b6cb0;
+    }
+
+    .progress-bar-bg {
+      background: #e2e8f0;
+      border-radius: 999px;
+      height: 12px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4299e1, #2b6cb0);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-bar-fill.complete {
+      background: linear-gradient(90deg, #48bb78, #276749);
+    }
+
+    .complete-msg {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #276749;
+      display: none;
+    }
+
+    /* リセットボタン */
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .btn-reset {
+      background: #fed7d7;
+      color: #c53030;
+    }
+    .btn-reset:hover { background: #feb2b2; }
+
+    .btn-add-cat {
+      background: #bee3f8;
+      color: #2b6cb0;
+    }
+    .btn-add-cat:hover { background: #90cdf4; }
+
+    /* カテゴリカード */
+    .category-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+
+    .category-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .category-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #2b6cb0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .category-name span.icon {
+      font-size: 1.2rem;
+    }
+
+    .category-count {
+      font-size: 0.8rem;
+      color: #718096;
+    }
+
+    .category-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-rename-cat {
+      background: #e2e8f0;
+      color: #4a5568;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+    }
+    .btn-rename-cat:hover { background: #cbd5e0; }
+
+    .btn-delete-cat {
+      background: #fed7d7;
+      color: #c53030;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+    }
+    .btn-delete-cat:hover { background: #feb2b2; }
+
+    /* アイテムリスト */
+    .item-list { list-style: none; }
+
+    .item-list li {
+      display: flex;
+      align-items: center;
+      padding: 10px 4px;
+      border-bottom: 1px solid #f7fafc;
+      gap: 10px;
+    }
+
+    .item-list li:last-child { border-bottom: none; }
+
+    .item-list li.checked .item-label {
+      text-decoration: line-through;
+      color: #a0aec0;
+    }
+
+    /* カスタムチェックボックス */
+    .checkbox-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .checkbox-wrap input[type="checkbox"] {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #cbd5e0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      display: block;
+    }
+
+    .checkbox-wrap input[type="checkbox"]:checked {
+      background: #4299e1;
+      border-color: #4299e1;
+    }
+
+    .checkbox-wrap input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 7px;
+      width: 6px;
+      height: 11px;
+      border: 2.5px solid #fff;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .item-label {
+      flex: 1;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+      word-break: break-all;
+    }
+
+    .btn-delete-item {
+      background: none;
+      color: #cbd5e0;
+      padding: 2px 6px;
+      font-size: 1rem;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .btn-delete-item:hover { background: #fed7d7; color: #c53030; }
+
+    /* アイテム追加フォーム */
+    .add-item-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .add-item-form input {
+      flex: 1;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .add-item-form input:focus { border-color: #4299e1; }
+
+    .btn-add-item {
+      background: #4299e1;
+      color: #fff;
+      padding: 8px 14px;
+    }
+    .btn-add-item:hover { background: #2b6cb0; }
+
+    /* カテゴリ追加モーダル風インライン */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      width: 320px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+
+    .modal h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #2b6cb0;
+      margin-bottom: 16px;
+    }
+
+    .modal input {
+      width: 100%;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 8px;
+      transition: border-color 0.2s;
+    }
+
+    .modal input:focus { border-color: #4299e1; }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+
+    .btn-cancel {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+    .btn-cancel:hover { background: #cbd5e0; }
+
+    .btn-confirm {
+      background: #4299e1;
+      color: #fff;
+    }
+    .btn-confirm:hover { background: #2b6cb0; }
+
+    /* アイコン選択 */
+    .icon-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .icon-btn {
+      font-size: 1.4rem;
+      background: #f7fafc;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .icon-btn.selected {
+      border-color: #4299e1;
+      background: #ebf8ff;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.78rem;
+      color: #a0aec0;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 12px; }
+      .modal { width: 90vw; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>持ち物チェック</h1>
+    <p>外出前の準備・持ち物確認</p>
+  </header>
+
+  <!-- 進捗 -->
+  <div class="progress-wrap">
+    <div class="progress-header">
+      <span class="progress-label">チェック進捗</span>
+      <span class="progress-count" id="progressCount">0 / 0</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+    </div>
+    <div class="complete-msg" id="completeMsg">✅ 準備完了！いってらっしゃい！</div>
+  </div>
+
+  <!-- トップアクション -->
+  <div class="top-actions">
+    <button class="btn-reset" onclick="resetAll()">チェックをリセット</button>
+    <button class="btn-add-cat" onclick="openAddCatModal()">＋ カテゴリを追加</button>
+  </div>
+
+  <!-- カテゴリ一覧 -->
+  <div id="categoriesContainer"></div>
+
+  <footer>データはブラウザに自動保存されます</footer>
+
+  <!-- カテゴリ追加/編集モーダル -->
+  <div class="modal-overlay" id="catModal">
+    <div class="modal">
+      <h2 id="modalTitle">カテゴリを追加</h2>
+      <div class="icon-picker" id="iconPicker"></div>
+      <input type="text" id="catNameInput" placeholder="カテゴリ名（例：財布・鍵）" maxlength="20">
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-confirm" id="modalConfirmBtn" onclick="confirmModal()">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ICONS = ['👜','🎒','👛','🔑','📱','💳','🏥','📚','☂️','🧣','👟','💊','🎧','📝','🛒','✈️','🏋️','🍱'];
+    const STORAGE_KEY = 'mochimonocheckv1';
+
+    let data = { categories: [] };
+    let modalMode = null; // 'add' | 'edit'
+    let editCatId = null;
+    let selectedIcon = ICONS[0];
+
+    function load() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) data = JSON.parse(saved);
+      } catch {}
+      if (!data.categories || data.categories.length === 0) {
+        data = { categories: [
+          { id: uid(), icon: '👛', name: '必需品', items: [
+            { id: uid(), label: '財布', checked: false },
+            { id: uid(), label: '鍵', checked: false },
+            { id: uid(), label: 'スマホ', checked: false },
+          ]},
+          { id: uid(), icon: '👗', name: '衣類・身だしなみ', items: [
+            { id: uid(), label: 'ハンカチ', checked: false },
+            { id: uid(), label: 'マスク', checked: false },
+          ]},
+          { id: uid(), icon: '🎒', name: 'バッグの中身', items: [
+            { id: uid(), label: 'イヤホン', checked: false },
+            { id: uid(), label: 'エコバッグ', checked: false },
+          ]},
+        ]};
+        save();
+      }
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2);
+    }
+
+    function render() {
+      const container = document.getElementById('categoriesContainer');
+      container.innerHTML = '';
+
+      data.categories.forEach(cat => {
+        const checkedCount = cat.items.filter(i => i.checked).length;
+        const total = cat.items.length;
+
+        const card = document.createElement('div');
+        card.className = 'category-card';
+        card.innerHTML = `
+          <div class="category-header">
+            <div class="category-name">
+              <span class="icon">${cat.icon}</span>
+              <span>${escHtml(cat.name)}</span>
+              <span class="category-count">${checkedCount}/${total}</span>
+            </div>
+            <div class="category-actions">
+              <button class="btn-rename-cat" onclick="openEditCatModal('${cat.id}')">編集</button>
+              <button class="btn-delete-cat" onclick="deleteCat('${cat.id}')">削除</button>
+            </div>
+          </div>
+          <ul class="item-list" id="list-${cat.id}"></ul>
+          <div class="add-item-form">
+            <input type="text" id="newitem-${cat.id}" placeholder="アイテムを追加" maxlength="30"
+              onkeydown="if(event.key==='Enter') addItem('${cat.id}')">
+            <button class="btn-add-item" onclick="addItem('${cat.id}')">追加</button>
+          </div>
+        `;
+        container.appendChild(card);
+
+        const ul = document.getElementById(`list-${cat.id}`);
+        cat.items.forEach(item => {
+          const li = document.createElement('li');
+          li.className = item.checked ? 'checked' : '';
+          li.innerHTML = `
+            <div class="checkbox-wrap">
+              <input type="checkbox" ${item.checked ? 'checked' : ''}
+                onchange="toggleItem('${cat.id}', '${item.id}', this.checked)">
+            </div>
+            <span class="item-label">${escHtml(item.label)}</span>
+            <button class="btn-delete-item" onclick="deleteItem('${cat.id}', '${item.id}')">✕</button>
+          `;
+          ul.appendChild(li);
+        });
+      });
+
+      updateProgress();
+    }
+
+    function updateProgress() {
+      let total = 0, checked = 0;
+      data.categories.forEach(cat => {
+        total += cat.items.length;
+        checked += cat.items.filter(i => i.checked).length;
+      });
+      document.getElementById('progressCount').textContent = `${checked} / ${total}`;
+      const pct = total === 0 ? 0 : Math.round(checked / total * 100);
+      const bar = document.getElementById('progressBar');
+      bar.style.width = pct + '%';
+      bar.className = 'progress-bar-fill' + (pct === 100 && total > 0 ? ' complete' : '');
+      const msg = document.getElementById('completeMsg');
+      msg.style.display = (pct === 100 && total > 0) ? 'block' : 'none';
+    }
+
+    function toggleItem(catId, itemId, checked) {
+      const cat = data.categories.find(c => c.id === catId);
+      const item = cat.items.find(i => i.id === itemId);
+      item.checked = checked;
+      save();
+      render();
+    }
+
+    function addItem(catId) {
+      const input = document.getElementById(`newitem-${catId}`);
+      const label = input.value.trim();
+      if (!label) return;
+      const cat = data.categories.find(c => c.id === catId);
+      cat.items.push({ id: uid(), label, checked: false });
+      save();
+      render();
+      // フォーカス維持
+      setTimeout(() => {
+        const el = document.getElementById(`newitem-${catId}`);
+        if (el) el.focus();
+      }, 0);
+    }
+
+    function deleteItem(catId, itemId) {
+      const cat = data.categories.find(c => c.id === catId);
+      cat.items = cat.items.filter(i => i.id !== itemId);
+      save();
+      render();
+    }
+
+    function deleteCat(catId) {
+      if (!confirm('このカテゴリを削除しますか？')) return;
+      data.categories = data.categories.filter(c => c.id !== catId);
+      save();
+      render();
+    }
+
+    function resetAll() {
+      if (!confirm('全てのチェックをリセットしますか？')) return;
+      data.categories.forEach(cat => cat.items.forEach(i => i.checked = false));
+      save();
+      render();
+    }
+
+    // --- モーダル ---
+    function buildIconPicker() {
+      const picker = document.getElementById('iconPicker');
+      picker.innerHTML = '';
+      ICONS.forEach(icon => {
+        const btn = document.createElement('button');
+        btn.className = 'icon-btn' + (icon === selectedIcon ? ' selected' : '');
+        btn.textContent = icon;
+        btn.onclick = () => {
+          selectedIcon = icon;
+          document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        };
+        picker.appendChild(btn);
+      });
+    }
+
+    function openAddCatModal() {
+      modalMode = 'add';
+      editCatId = null;
+      selectedIcon = ICONS[0];
+      document.getElementById('modalTitle').textContent = 'カテゴリを追加';
+      document.getElementById('modalConfirmBtn').textContent = '追加';
+      document.getElementById('catNameInput').value = '';
+      buildIconPicker();
+      document.getElementById('catModal').classList.add('open');
+      document.getElementById('catNameInput').focus();
+    }
+
+    function openEditCatModal(catId) {
+      modalMode = 'edit';
+      editCatId = catId;
+      const cat = data.categories.find(c => c.id === catId);
+      selectedIcon = cat.icon;
+      document.getElementById('modalTitle').textContent = 'カテゴリを編集';
+      document.getElementById('modalConfirmBtn').textContent = '保存';
+      document.getElementById('catNameInput').value = cat.name;
+      buildIconPicker();
+      document.getElementById('catModal').classList.add('open');
+      document.getElementById('catNameInput').focus();
+    }
+
+    function closeModal() {
+      document.getElementById('catModal').classList.remove('open');
+    }
+
+    function confirmModal() {
+      const name = document.getElementById('catNameInput').value.trim();
+      if (!name) { alert('カテゴリ名を入力してください'); return; }
+      if (modalMode === 'add') {
+        data.categories.push({ id: uid(), icon: selectedIcon, name, items: [] });
+      } else {
+        const cat = data.categories.find(c => c.id === editCatId);
+        cat.icon = selectedIcon;
+        cat.name = name;
+      }
+      save();
+      render();
+      closeModal();
+    }
+
+    // Enterキーでモーダル確定
+    document.getElementById('catNameInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') confirmModal();
+    });
+
+    // オーバーレイクリックで閉じる
+    document.getElementById('catModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('catModal')) closeModal();
+    });
+
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    load();
+    render();
+  </script>
+</body>
+</html>
