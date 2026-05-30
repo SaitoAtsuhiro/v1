@@ -62,9 +62,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(parsed);
   } catch (error) {
-    console.error("AI advice error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("AI advice error:", message);
     return NextResponse.json(
-      { error: "AIアドバイスの取得に失敗しました" },
+      { error: `AIアドバイスの取得に失敗しました: ${message}` },
       { status: 500 }
     );
   }
