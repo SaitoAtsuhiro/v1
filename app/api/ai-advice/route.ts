@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const prompt = `あなたは持ち物リストのアドバイザーです。
 ユーザーが「${situation}」という状況を教えてくれました。
 この状況に持っていくべき持ち物を提案してください。
