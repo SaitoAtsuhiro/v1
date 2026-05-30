@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = `あなたは持ち物リストのアドバイザーです。
 ユーザーが「${situation}」という状況を教えてくれました。
 この状況に持っていくべき持ち物を提案してください。
@@ -62,10 +62,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(parsed);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("AI advice error:", message);
+    console.error("AI advice error:", error);
     return NextResponse.json(
-      { error: `AIアドバイスの取得に失敗しました: ${message}` },
+      { error: "AIアドバイスの取得に失敗しました" },
       { status: 500 }
     );
   }
