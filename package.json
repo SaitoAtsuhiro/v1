@@ -14,12 +14,14 @@
     "react": "^19",
     "react-dom": "^19",
     "@supabase/supabase-js": "^2.44.4",
-    "@google/generative-ai": "^0.15.0"
+    "@google/generative-ai": "^0.15.0",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/bcryptjs": "^2.4.6",
     "typescript": "^5"
   }
 }

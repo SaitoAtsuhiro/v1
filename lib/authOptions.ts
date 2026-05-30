@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { createClient } from "@supabase/supabase-js";
+import bcrypt from "bcryptjs";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,25 +10,35 @@ const supabaseAdmin = createClient(
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "メールアドレス", type: "email" },
+        password: { label: "パスワード", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("id, email, name, password_hash")
+          .eq("email", credentials.email)
+          .single();
+
+        if (!profile?.password_hash) return null;
+
+        const isValid = await bcrypt.compare(credentials.password, profile.password_hash);
+        if (!isValid) return null;
+
+        return {
+          id: profile.id,
+          email: profile.email,
+          name: profile.name ?? profile.email,
+        };
+      },
     }),
   ],
   callbacks: {
-    async signIn({ user }) {
-      if (!user.email) return false;
-      await supabaseAdmin.from("profiles").upsert(
-        {
-          id: user.id,
-          email: user.email,
-          name: user.name ?? null,
-          image: user.image ?? null,
-        },
-        { onConflict: "id" }
-      );
-      return true;
-    },
     async session({ session, token }) {
       if (session.user && token.sub) {
         (session.user as { id?: string }).id = token.sub;
@@ -39,4 +50,5 @@ export const authOptions: NextAuthOptions = {
     },
   },
   session: { strategy: "jwt" },
+  pages: { signIn: "/" },
 };

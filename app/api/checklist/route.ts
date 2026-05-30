@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { Session } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createAdminClient } from "@/lib/supabase";
 
-function getUserId(session: Awaited<ReturnType<typeof getServerSession>>) {
+function getUserId(session: Session | null) {
   return (session?.user as { id?: string })?.id ?? null;
 }
 

@@ -3,7 +3,7 @@ create table if not exists profiles (
   id text primary key,
   email text unique not null,
   name text,
-  image text,
+  password_hash text,
   created_at timestamptz default now()
 );
 

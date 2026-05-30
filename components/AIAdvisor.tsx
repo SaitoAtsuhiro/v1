@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { signIn } from "next-auth/react";
 import { AIAdviceResult, Category } from "@/types";
 
 interface Props {
@@ -109,9 +108,7 @@ export default function AIAdvisor({ onAddToChecklist }: Props) {
             {!session?.user ? (
               <div className="ai-login-prompt">
                 <p>AIアドバイス機能はログインが必要です</p>
-                <button className="btn-signin-prompt" onClick={() => signIn("google")}>
-                  Googleでログイン
-                </button>
+                <p style={{ fontSize: "0.82rem", color: "#a0aec0" }}>ヘッダーのログインボタンからログインしてください</p>
               </div>
             ) : (
               <>
