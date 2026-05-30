@@ -38,7 +38,7 @@ export async function POST(req: Request) {
   });
 
   if (error) {
-    return NextResponse.json({ error: "登録に失敗しました" }, { status: 500 });
+    return NextResponse.json({ error: `登録に失敗しました: ${error.message}` }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
