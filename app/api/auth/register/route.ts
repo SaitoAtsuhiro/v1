@@ -3,10 +3,14 @@ import bcrypt from "bcryptjs";
 import { createAdminClient } from "@/lib/supabase";
 
 export async function POST(req: Request) {
-  const { email, password } = await req.json();
+  const { username, password } = await req.json();
 
-  if (!email || !password) {
-    return NextResponse.json({ error: "メールアドレスとパスワードを入力してください" }, { status: 400 });
+  if (!username || !password) {
+    return NextResponse.json({ error: "IDとパスワードを入力してください" }, { status: 400 });
+  }
+
+  if (username.length < 3) {
+    return NextResponse.json({ error: "IDは3文字以上にしてください" }, { status: 400 });
   }
 
   if (password.length < 6) {
@@ -18,19 +22,18 @@ export async function POST(req: Request) {
   const { data: existing } = await supabase
     .from("profiles")
     .select("id")
-    .eq("email", email)
+    .eq("username", username)
     .single();
 
   if (existing) {
-    return NextResponse.json({ error: "このメールアドレスは既に登録されています" }, { status: 409 });
+    return NextResponse.json({ error: "このIDは既に使用されています" }, { status: 409 });
   }
 
   const password_hash = await bcrypt.hash(password, 10);
 
   const { error } = await supabase.from("profiles").insert({
     id: crypto.randomUUID(),
-    email,
-    name: email.split("@")[0],
+    username,
     password_hash,
   });
 

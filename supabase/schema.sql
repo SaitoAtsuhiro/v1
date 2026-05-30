@@ -1,8 +1,7 @@
 -- ユーザープロフィール
 create table if not exists profiles (
   id text primary key,
-  email text unique not null,
-  name text,
+  username text unique not null,
   password_hash text,
   created_at timestamptz default now()
 );

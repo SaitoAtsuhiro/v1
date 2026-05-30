@@ -6,7 +6,7 @@ export default function AuthButton() {
   const { data: session, status } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ export default function AuthButton() {
     return (
       <div className="auth-btn-wrap">
         <div className="user-info">
-          <span className="user-name">{session.user.name ?? session.user.email}</span>
+          <span className="user-name">{session.user.name}</span>
         </div>
         <button className="btn-signout" onClick={() => signOut()}>
           ログアウト
@@ -41,7 +41,7 @@ export default function AuthButton() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -52,17 +52,17 @@ export default function AuthButton() {
     }
 
     const result = await signIn("credentials", {
-      email,
+      username,
       password,
       redirect: false,
     });
 
     setLoading(false);
     if (result?.error) {
-      setError(isRegister ? "登録後のログインに失敗しました" : "メールアドレスまたはパスワードが違います");
+      setError(isRegister ? "登録後のログインに失敗しました" : "IDまたはパスワードが違います");
     } else {
       setShowModal(false);
-      setEmail("");
+      setUsername("");
       setPassword("");
     }
   };
@@ -70,7 +70,7 @@ export default function AuthButton() {
   const openModal = (register: boolean) => {
     setIsRegister(register);
     setError("");
-    setEmail("");
+    setUsername("");
     setPassword("");
     setShowModal(true);
   };
@@ -94,11 +94,12 @@ export default function AuthButton() {
           </div>
           <form onSubmit={handleSubmit}>
             <input
-              type="email"
-              placeholder="メールアドレス"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="ID（3文字以上）"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
+              minLength={3}
             />
             <input
               type="password"

@@ -13,16 +13,16 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        email: { label: "メールアドレス", type: "email" },
+        username: { label: "ID", type: "text" },
         password: { label: "パスワード", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.username || !credentials?.password) return null;
 
         const { data: profile } = await supabaseAdmin
           .from("profiles")
-          .select("id, email, name, password_hash")
-          .eq("email", credentials.email)
+          .select("id, username, password_hash")
+          .eq("username", credentials.username)
           .single();
 
         if (!profile?.password_hash) return null;
@@ -32,8 +32,7 @@ export const authOptions: NextAuthOptions = {
 
         return {
           id: profile.id,
-          email: profile.email,
-          name: profile.name ?? profile.email,
+          name: profile.username,
         };
       },
     }),
